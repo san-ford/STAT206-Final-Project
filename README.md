@@ -1,5 +1,6 @@
 # STAT206-Final-Project
 
+
 1. create working branch off of development in RStudio
 2. when done, commit changes
   a.git commit -am"message here"
