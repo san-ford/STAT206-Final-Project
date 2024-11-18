@@ -1,7 +1,7 @@
 ---
 title: "Final Project Title"
 author: "Kevin Sanford, Maile Kamada, and Harshaan Sall"
-date: "11-16-2024"
+date: "12-6-2024"
 format:
   html:
     toc: true
@@ -13,30 +13,9 @@ format:
 editor: visual
 ---
 
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
-```{r}
-1 + 1
-```
-
-You can add options to executable code like this
-
-```{r}
-#| echo: false
-2 * 2
-```
-
-The `echo: false` option disables the printing of code (only output is displayed).
-
 ## Introduction
 
-The sections above are default when starting a new Quarto project. We will delete them later. This is where we introduce the project.
+We intend to use linear regression techniques to approach the exercise in the Kaggle competition found at [https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques](https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques/data). The exercise provides a large data sets that describes houses in Ames, Iowa with 79 parameters. The goal of the exercise is to create an algorithm that predicts the selling price of homes based on the parameters. The data provided consists of two data sets: test.csv and train.csv. The training data set includes housing prices to facilitate the creation of a linear regression model that predicts sale prices of homes, which can then be tested on the test data set. We begin by importing the data sets and previewing them.
 
 ```{r}
 # check out data structure
@@ -44,4 +23,86 @@ housing_data.train <- read.csv("train.csv")
 housing_data.test <- read.csv("test.csv")
 head(housing_data.train)
 head(housing_data.test)
+```
+
+We also want to know the dimensions of the data sets.
+
+```{r}
+dim(housing_data.test)
+dim(housing_data.train)
+```
+
+Next, we look at some plots of the data.
+
+```{r}
+# some numerical plots
+plot(housing_data.train$YearBuilt,
+     housing_data.train$SalePrice,
+     xlab = "Year Built",
+     ylab = "Sale Price")
+plot(housing_data.train$LotArea,
+     housing_data.train$SalePrice,
+     xlab = "Lot Area",
+     ylab = "Sale Price")
+plot(housing_data.train$LotFrontage,
+     housing_data.train$SalePrice,
+     xlab = "Lot Frontage",
+     ylab = "Sale Price")
+plot(housing_data.train$GrLivArea,
+     housing_data.train$SalePrice,
+     xlab = "Living Area Square Feet",
+     ylab = "Sale Price")
+```
+
+These plots show some positive correlation, suggesting that several factors are important for the cost of a home in Ames. Now we look at some categorical factors that may also affect the cost.
+
+```{r}
+plot(factor(housing_data.train$Neighborhood),
+     housing_data.train$SalePrice,
+     xlab = "Neighborhood",
+     ylab = "Sale Price")
+plot(factor(housing_data.train$MSZoning),
+     housing_data.train$SalePrice,
+     xlab = "Zone",
+     ylab = "Sale Price")
+plot(factor(housing_data.train$Street),
+     housing_data.train$SalePrice,
+     xlab = "Type of Street",
+     ylab = "Sale Price")
+plot(factor(housing_data.train$Heating),
+     housing_data.train$SalePrice,
+     xlab = "Heating Type",
+     ylab = "Sale Price")
+```
+
+Next, we use the `lm()` function to give us more insight on these relationships using linear models.
+
+```{r}
+housing.lm.1 <- lm(housing_data.train$SalePrice ~ housing_data.train$YearBuilt,
+                   data = housing_data.train)
+housing.lm.2 <- lm(housing_data.train$SalePrice ~ housing_data.train$LotArea,
+                   data = housing_data.train)
+housing.lm.3 <- lm(housing_data.train$SalePrice ~ housing_data.train$LotFrontage,
+                   data = housing_data.train)
+housing.lm.4 <- lm(housing_data.train$SalePrice ~ housing_data.train$GrLivArea,
+                   data = housing_data.train)
+plot(housing.lm.1)
+plot(housing.lm.2)
+plot(housing.lm.3)
+plot(housing.lm.4)
+```
+
+```{r}
+housing.lm.5 <- lm(housing_data.train$SalePrice~housing_data.train$Neighborhood,
+                   data = housing_data.train)
+housing.lm.6 <- lm(housing_data.train$SalePrice~housing_data.train$MSZoning,
+                   data = housing_data.train)
+housing.lm.7 <- lm(housing_data.train$SalePrice~housing_data.train$Street,
+                   data = housing_data.train)
+housing.lm.8 <- lm(housing_data.train$SalePrice~housing_data.train$Heating,
+                   data = housing_data.train)
+plot(housing.lm.5)
+plot(housing.lm.6)
+plot(housing.lm.7)
+plot(housing.lm.8)
 ```
