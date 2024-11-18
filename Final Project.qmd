@@ -37,3 +37,11 @@ The `echo: false` option disables the printing of code (only output is displayed
 ## Introduction
 
 The sections above are default when starting a new Quarto project. We will delete them later. This is where we introduce the project.
+
+```{r}
+# check out data structure
+housing_data.train <- read.csv("train.csv")
+housing_data.test <- read.csv("test.csv")
+head(housing_data.train)
+head(housing_data.test)
+```
