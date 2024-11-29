@@ -25,11 +25,13 @@ head(housing_data.train)
 head(housing_data.test)
 ```
 
-We also want to know the dimensions of the data sets.
+We also want to know the dimensions and summary of the data sets.
 
 ```{r}
 dim(housing_data.test)
 dim(housing_data.train)
+
+summary(housing_data.train)
 ```
 
 Next, we look at some plots of the data.
@@ -42,6 +44,10 @@ plot(housing_data.train$YearBuilt,
      ylab = "Sale Price")
 plot(housing_data.train$LotArea,
      housing_data.train$SalePrice,
+     xlab = "Lot Area",
+     ylab = "Sale Price")
+plot(housing_data.train$LotArea[housing_data.train$LotArea < 50000],
+     housing_data.train$SalePrice[housing_data.train$LotArea < 50000],
      xlab = "Lot Area",
      ylab = "Sale Price")
 plot(housing_data.train$LotFrontage,
@@ -61,10 +67,6 @@ plot(factor(housing_data.train$Neighborhood),
      housing_data.train$SalePrice,
      xlab = "Neighborhood",
      ylab = "Sale Price")
-plot(factor(housing_data.train$MSZoning),
-     housing_data.train$SalePrice,
-     xlab = "Zone",
-     ylab = "Sale Price")
 plot(factor(housing_data.train$Street),
      housing_data.train$SalePrice,
      xlab = "Type of Street",
@@ -73,36 +75,81 @@ plot(factor(housing_data.train$Heating),
      housing_data.train$SalePrice,
      xlab = "Heating Type",
      ylab = "Sale Price")
+plot(factor(housing_data.train$BldgType),
+     housing_data.train$SalePrice,
+     xlab = "Building Type",
+     ylab = "Sale Price")
 ```
 
-Next, we use the `lm()` function to give us more insight on these relationships using linear models.
+Check to ensure the Sale Price has normal distribution
 
 ```{r}
-housing.lm.1 <- lm(housing_data.train$SalePrice ~ housing_data.train$YearBuilt,
-                   data = housing_data.train)
-housing.lm.2 <- lm(housing_data.train$SalePrice ~ housing_data.train$LotArea,
-                   data = housing_data.train)
-housing.lm.3 <- lm(housing_data.train$SalePrice ~ housing_data.train$LotFrontage,
-                   data = housing_data.train)
-housing.lm.4 <- lm(housing_data.train$SalePrice ~ housing_data.train$GrLivArea,
-                   data = housing_data.train)
-plot(housing.lm.1)
+qqnorm(housing_data.train$SalePrice)
+qqline(housing_data.train$SalePrice)
+```
+
+Apply log function to ensure normal dist
+
+```{r}
+qqnorm(log(housing_data.train$SalePrice))
+qqline(log(housing_data.train$SalePrice))
+```
+
+Use T test to see which variables are significant
+
+```{r}
+t.test (log(housing_data.train$SalePrice[housing_data.train$Neighborhood == 'NAmes']))
+t.test (log(housing_data.train$SalePrice[housing_data.train$Neighborhood == 'CollgCr']))
+t.test (log(housing_data.train$SalePrice[housing_data.train$Neighborhood == 'OldTown']))
+t.test (log(housing_data.train$SalePrice[housing_data.train$Neighborhood == 'Edwards']))
+t.test (log(housing_data.train$SalePrice[housing_data.train$LotArea < 50000]))
+
+```
+
+Apply lm to lot area
+
+```{r}
+
+
+housing.lm <- lm(log(housing_data.train$SalePrice) ~  housing_data.train$LotArea ,data=housing_data.train)
+
+housing.lm
+plot(housing.lm)
+```
+
+We an see that the Residuals vs fitted is not straight, try to remove outliers
+
+```{r}
+housing_data.train.noout <- housing_data.train[housing_data.train$LotArea < 10000,]
+
+housing.lm.2 <- lm(log(housing_data.train$SalePrice) ~  housing_data.train$LotArea ,data=housing_data.train.noout)
+
+housing.lm.2
 plot(housing.lm.2)
+```
+
+Try adding in another feature
+
+```{r}
+housing.lm.3 <- lm(log(housing_data.train.noout$SalePrice) ~ + housing_data.train.noout$LotArea + housing_data.train.noout$Neighborhood,
+                   data = housing_data.train.noout)
+housing.lm.3
 plot(housing.lm.3)
-plot(housing.lm.4)
+```
+
+try the same steps with glm
+
+```{r}
+summary(housing.lm.3)
+housing_predict <- predict.lm(housing.lm.3)
 ```
 
 ```{r}
-housing.lm.5 <- lm(housing_data.train$SalePrice~housing_data.train$Neighborhood,
-                   data = housing_data.train)
-housing.lm.6 <- lm(housing_data.train$SalePrice~housing_data.train$MSZoning,
-                   data = housing_data.train)
-housing.lm.7 <- lm(housing_data.train$SalePrice~housing_data.train$Street,
-                   data = housing_data.train)
-housing.lm.8 <- lm(housing_data.train$SalePrice~housing_data.train$Heating,
-                   data = housing_data.train)
-plot(housing.lm.5)
-plot(housing.lm.6)
-plot(housing.lm.7)
-plot(housing.lm.8)
+
+cor(housing_data.train.noout$SalePrice,housing_predict)
+
+```
+
+```{r}
+plot(housing_data.train.noout$SalePrice,exp(housing_predict))
 ```
