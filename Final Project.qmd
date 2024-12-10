@@ -15,7 +15,28 @@ editor: visual
 
 ## Introduction
 
-We intend to use linear regression techniques to approach the exercise in the Kaggle competition found at [https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques](https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques/data). The exercise provides a large data sets that describes houses in Ames, Iowa with 79 parameters. The goal of the exercise is to create an algorithm that predicts the selling price of homes based on the parameters. The data provided consists of two data sets: test.csv and train.csv. The training data set includes housing prices to facilitate the creation of a linear regression model that predicts sale prices of homes, which can then be tested on the test data set. We begin by importing the data sets and previewing them.
+---
+title: "Final Project Title"
+author: "Kevin Sanford, Maile Kamada, and Harshaan Sall"
+date: "12-6-2024"
+format:
+  html:
+    toc: true
+    toc-location: left
+    embed-resources: true
+    code-line-numbers: true
+  pdf:
+    code-line-numbers: true
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+```
+
+## Introduction
+
+We intend to use linear regression techniques to approach the exercise in the Kaggle competition found at [https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques](https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques/data). The exercise provides two large data sets that describe houses in Ames, Iowa with 79 parameters. The goal of the exercise is to create an algorithm that predicts the selling price of homes based on the parameters. The data provided consists of two data sets: test.csv and train.csv. The training data set includes housing prices to facilitate the creation of a linear regression model that predicts sale prices of homes, which can then be tested on the test data set. Before using the test data set, we will attempt to maximize the accuracy of the model by splitting the training data in half, using half of the data for training, then comparing the other half with the model's prediction. After tuning the model, we will retrain it on the full training data set and predict housing prices for the test data set. We begin by importing the data sets and previewing them.
 
 ```{r}
 # check out data structure
@@ -33,6 +54,8 @@ dim(housing_data.train)
 
 summary(housing_data.train)
 ```
+
+## Exploring the Data
 
 Next, we look at some plots of the data.
 
@@ -58,6 +81,66 @@ plot(housing_data.train$GrLivArea,
      housing_data.train$SalePrice,
      xlab = "Living Area Square Feet",
      ylab = "Sale Price")
+plot(housing_data.train$X1stFlrSF,
+     housing_data.train$SalePrice,
+     xlab = "Year Remodeled",
+     ylab = "Sale Price")
+```
+
+Now we'll use ggplot2 to plot the same data with median sale price and trendlines with standard error.
+
+```{r}
+# some numerical plots using ggplot2
+ggplot(housing_data.train,
+        aes(x = YearBuilt,
+            y = SalePrice/1000)
+) + geom_point() +
+  geom_hline(yintercept = median(housing_data.train$SalePrice/1000)) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(y = "Sale Price ($1000's)",
+       x = "Year Built",
+       title = "Year Built vs. Sale Price")
+
+ggplot(housing_data.train,
+        aes(x = LotArea,
+            y = SalePrice/1000)
+) + geom_point() +
+  geom_hline(yintercept = median(housing_data.train$SalePrice/1000)) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(y = "Sale Price ($1000's)",
+       x = "Lot Area",
+       title = "Lot Area vs. Sale Price")
+
+housing_data.train %>%
+  filter(LotArea < 50000) %>%
+  ggplot(aes(x = LotArea,
+             y = SalePrice/1000)) +
+  geom_point() +
+  geom_hline(yintercept = median(housing_data.train$SalePrice/1000)) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(y = "Sale Price ($1000's)",
+       x = "Lot Area (Less than 50k)",
+       title = "Lot Area Less Than 50k vs. Sale Price")
+
+ggplot(housing_data.train,
+        aes(x = LotFrontage,
+            y = SalePrice/1000)
+) + geom_point() +
+  geom_hline(yintercept = median(housing_data.train$SalePrice/1000)) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(y = "Sale Price ($1000's)",
+       x = "Lot Frontage",
+       title = "Lot Frontage vs. Sale Price")
+
+ggplot(housing_data.train,
+        aes(x = GrLivArea,
+            y = SalePrice/1000)
+) + geom_point() +
+  geom_hline(yintercept = median(housing_data.train$SalePrice/1000)) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(y = "Sale Price ($1000's)",
+       x = "Living Area Square Feet",
+       title = "Living Area Square Feet vs. Sale Price")
 ```
 
 These plots show some positive correlation, suggesting that several factors are important for the cost of a home in Ames. Now we look at some categorical factors that may also affect the cost.
@@ -82,51 +165,251 @@ plot(factor(housing_data.train$BldgType),
      ylab = "Sale Price")
 ```
 
-Check to ensure the Sale Price has normal distribution
+Now we use ggplot2 to to combine some of the numerical and categorical plots
+
+```{r}
+# combine plots of different variables with ggplot
+# plot year built vs sale price with different neighbrhoods colored
+ggplot(housing_data.train,
+        aes(x = YearBuilt,
+            y = SalePrice/1000,
+            color = Neighborhood)
+) + geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(y = "Sale Price ($1000's)",
+       x = "Year Built",
+       title = "Year Built vs. Sale Price")
+
+# plot year built vs sale price for each neighborhood
+housing_data.train %>%
+  ggplot(aes(x = YearBuilt,
+             y = SalePrice/1000)) +
+  geom_point() +
+  facet_wrap(~Neighborhood) +
+  geom_hline(yintercept = median(housing_data.train$SalePrice/1000)) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(y = "Sale Price ($1000's)",
+       x = "Year Built",
+       title = "Year Built vs. Sale Price in Each Neighborhood")
+
+# plot only 9 or less of the plots above for readability
+housing_data.train %>%
+  filter(Neighborhood != "IDOTRR") %>%
+  filter(Neighborhood != "MeadowV") %>%
+  filter(Neighborhood != "Mitchel") %>%
+  filter(Neighborhood != "NAmes") %>%
+  filter(Neighborhood != "NoRidge") %>%
+  filter(Neighborhood != "NPkVill") %>%
+  filter(Neighborhood != "NridgHt") %>%
+  filter(Neighborhood != "NWAmes") %>%
+  filter(Neighborhood != "OldTown") %>%
+  filter(Neighborhood != "Sawyer") %>%
+  filter(Neighborhood != "SawyerW") %>%
+  filter(Neighborhood != "Somerst") %>%
+  filter(Neighborhood != "StoneBr") %>%
+  filter(Neighborhood != "SWISU") %>%
+  filter(Neighborhood != "Timber") %>%
+  filter(Neighborhood != "Veenker") %>%
+  ggplot(aes(x = YearBuilt,
+             y = SalePrice/1000)) +
+  geom_point() +
+  facet_wrap(~Neighborhood) +
+  geom_hline(yintercept = median(housing_data.train$SalePrice/1000)) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(y = "Sale Price ($1000's)",
+       x = "Year Built",
+       title = "Year Built vs. Sale Price in Each Neighborhood")
+
+housing_data.train %>%
+  filter(Neighborhood != "Blmngtn") %>%
+  filter(Neighborhood != "Blueste") %>%
+  filter(Neighborhood != "BrDale") %>%
+  filter(Neighborhood != "BrkSide") %>%
+  filter(Neighborhood != "ClearCr") %>%
+  filter(Neighborhood != "CollgCr") %>%
+  filter(Neighborhood != "Crawfor") %>%
+  filter(Neighborhood != "Edwards") %>%
+  filter(Neighborhood != "Gilbert") %>%
+  filter(Neighborhood != "Sawyer") %>%
+  filter(Neighborhood != "SawyerW") %>%
+  filter(Neighborhood != "Somerst") %>%
+  filter(Neighborhood != "StoneBr") %>%
+  filter(Neighborhood != "SWISU") %>%
+  filter(Neighborhood != "Timber") %>%
+  filter(Neighborhood != "Veenker") %>%
+  ggplot(aes(x = YearBuilt,
+             y = SalePrice/1000)) +
+  geom_point() +
+  facet_wrap(~Neighborhood) +
+  geom_hline(yintercept = median(housing_data.train$SalePrice/1000)) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(y = "Sale Price ($1000's)",
+       x = "Year Built",
+       title = "Year Built vs. Sale Price in Each Neighborhood")
+
+housing_data.train %>%
+  filter(Neighborhood != "Blmngtn") %>%
+  filter(Neighborhood != "Blueste") %>%
+  filter(Neighborhood != "BrDale") %>%
+  filter(Neighborhood != "BrkSide") %>%
+  filter(Neighborhood != "ClearCr") %>%
+  filter(Neighborhood != "CollgCr") %>%
+  filter(Neighborhood != "Crawfor") %>%
+  filter(Neighborhood != "Edwards") %>%
+  filter(Neighborhood != "Gilbert") %>%
+  filter(Neighborhood != "IDOTRR") %>%
+  filter(Neighborhood != "MeadowV") %>%
+  filter(Neighborhood != "Mitchel") %>%
+  filter(Neighborhood != "NAmes") %>%
+  filter(Neighborhood != "NoRidge") %>%
+  filter(Neighborhood != "NPkVill") %>%
+  filter(Neighborhood != "NridgHt") %>%
+  filter(Neighborhood != "NWAmes") %>%
+  filter(Neighborhood != "OldTown") %>%
+  ggplot(aes(x = YearBuilt,
+             y = SalePrice/1000)) +
+  geom_point() +
+  facet_wrap(~Neighborhood) +
+  geom_hline(yintercept = median(housing_data.train$SalePrice/1000)) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(y = "Sale Price ($1000's)",
+       x = "Year Built",
+       title = "Year Built vs. Sale Price in Each Neighborhood")
+
+# plot year built vs sale price for each building type
+housing_data.train %>%
+  ggplot(aes(YearBuilt, SalePrice/1000, color = BldgType)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(y = "Sale Price ($1000's)",
+       x = "Year Built",
+       title = "Year Built vs. Sale Price",
+       color = "Building Type")
+
+# plot building type vs sale price, separated by street type
+ggplot(housing_data.train,
+        aes(x = Street,
+            y = SalePrice/1000,
+            color = BldgType)
+) + geom_boxplot() +
+  geom_hline(yintercept = median(housing_data.train$SalePrice/1000)) +
+  labs(y = "Sale Price ($1000's)",
+       x = "Street Type",
+       title = "Building Type vs. Sale Price",
+       color = "Building Type")
+```
+
+Some of the data from the plots are not insightful. We can see that the home prices in certain neighborhoods have changed over time and some have not. Some neighborhoods have very few data points, illustrating the fact that no one variable can be relied upon to predict housing price.
+
+## Creating a Linear Regression Model
+
+First, we split the training data and use half of it to train a linear regression model. When the model is trained, we can test its accuracy with the other half.
+
+```{r}
+# split the test data set in half
+housing_data.train.1 <- housing_data.train[1:730,]
+housing_data.train.2 <- housing_data.train[731:1460,]
+head(housing_data.train.1)
+head(housing_data.train.2)
+```
+
+Now we check to ensure the Sale Price has normal distribution
 
 ```{r}
 #view Q-Q plot to check if Sale Price has a normal distribution
-qqnorm(housing_data.train$SalePrice)
-qqline(housing_data.train$SalePrice)
+qqnorm(housing_data.train.1$SalePrice)
+qqline(housing_data.train.1$SalePrice)
 ```
 
 Apply log function to ensure normal dist
 
 ```{r}
 #apply log to the sale price like in the source paper to ensure normal dist
-qqnorm(log(housing_data.train$SalePrice))
-qqline(log(housing_data.train$SalePrice))
+qqnorm(log(housing_data.train.1$SalePrice))
+qqline(log(housing_data.train.1$SalePrice))
 ```
 
 Use T test to see which variables are significant
 
 ```{r}
 # check to make sure certain variables are significant
-t.test (log(housing_data.train$SalePrice[housing_data.train$Neighborhood == 'NAmes']))
-t.test (log(housing_data.train$SalePrice[housing_data.train$Neighborhood == 'CollgCr']))
-t.test (log(housing_data.train$SalePrice[housing_data.train$Neighborhood == 'OldTown']))
-t.test (log(housing_data.train$SalePrice[housing_data.train$Neighborhood == 'Edwards']))
-t.test (log(housing_data.train$SalePrice[housing_data.train$LotArea < 50000]))
+t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 'NAmes']))
+t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 'CollgCr']))
+t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 'OldTown']))
+t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 'Edwards']))
+t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 'NoRidge']))
+t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 'NridgHt']))
+t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 'Somerst']))
+t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 'StoneBr']))
+t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$LotArea < 50000]))
 
+```
+
+```{r}
+# check to make sure certain variables are significant
+t.test (housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 'NAmes'], housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood != 'NAmes'])
+
+t.test (housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 'CollgCr'], housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood != 'CollgCr'])
+
+t.test (housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 'OldTown'], housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood != 'OldTown'])
+
+t.test (housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 'Edwards'], housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood != 'Edwards'])
+
+t.test (housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 'NoRidge'], housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood != 'NoRidge'])
+
+t.test (housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 'NridgHt'], housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood != 'NridgHt'])
+
+t.test (housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 'Somerst'], housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood != 'Somerst'])
+
+t.test (housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 'StoneBr'], housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood != 'StoneBr'])
+
+t.test (housing_data.train.1$SalePrice,
+        housing_data.train.1$LotArea[housing_data.train.1$LotArea < 50000])
+```
+
+Measure correlation between sale price and variables to determine their significance
+
+```{r}
+print("Correlation between sale price and lot area:")
+cor(housing_data.train.1$SalePrice,
+    housing_data.train.1$LotArea)
+
+print("Correlation between sale price and lot area < 50k:")
+cor(housing_data.train.1$SalePrice[housing_data.train.1$LotArea < 50000],
+    housing_data.train.1$LotArea[housing_data.train.1$LotArea < 50000])
+
+print("Correlation between sale price and living room area:")
+cor(housing_data.train.1$SalePrice,
+    housing_data.train.1$GrLivArea)
+
+print("Correlation between sale price and year built:")
+cor(housing_data.train.1$SalePrice,
+    housing_data.train.1$YearBuilt)
+
+print("Correlation between sale price and year remodeled:")
+cor(housing_data.train.1$SalePrice,
+    housing_data.train.1$YearRemodAdd)
 ```
 
 Apply lm to lot area
 
 ```{r}
 #apply lm to lot area 
-housing.lm <- lm(log(housing_data.train$SalePrice) ~  housing_data.train$LotArea ,data=housing_data.train)
+housing.lm <- lm(housing_data.train.1$SalePrice ~  housing_data.train.1$LotArea ,data=housing_data.train.1)
 
 housing.lm
 plot(housing.lm)
 ```
 
-We an see that the Residuals vs fitted is not straight, try to remove outliers
+We can see that the Residuals vs fitted is not straight, try to remove outliers
 
 ```{r}
 #remove outliers
-housing_data.train.noout <- housing_data.train[housing_data.train$LotArea < 10000,]
+housing_data.train.noout <- housing_data.train.1[housing_data.train.1$LotArea < 50000,]
 
-housing.lm.2 <- lm(log(housing_data.train$SalePrice) ~  housing_data.train$LotArea ,data=housing_data.train.noout)
+housing.lm.2 <- lm(housing_data.train.noout$SalePrice
+                   ~  housing_data.train.noout$LotArea,
+                   data=housing_data.train.noout)
 
 housing.lm.2
 plot(housing.lm.2)
@@ -136,7 +419,7 @@ Try adding in another feature
 
 ```{r}
 #add another significant feature to improve model
-housing.lm.3 <- lm(log(housing_data.train.noout$SalePrice) ~ + housing_data.train.noout$LotArea + housing_data.train.noout$Neighborhood,
+housing.lm.3 <- lm(housing_data.train.noout$SalePrice ~ + housing_data.train.noout$LotArea + housing_data.train.noout$Neighborhood,
                    data = housing_data.train.noout)
 housing.lm.3
 plot(housing.lm.3)
@@ -148,12 +431,19 @@ summary(housing.lm.3)
 housing_predict <- predict.lm(housing.lm.3)
 ```
 
+## Testing the Linear Model
+
 ```{r}
 #see what the correlation is between the prediction and actuals
-cor(housing_data.train.noout$SalePrice,housing_predict)
-
+cor(housing_data.train.noout$SalePrice, housing_predict)
+housing_data.train.3 <- housing_data.train.2[1:410,] # match dimensions
+cor(housing_data.train.3$SalePrice, housing_predict)
 ```
 
 ```{r}
-plot(housing_data.train.noout$SalePrice,exp(housing_predict))
+plot(housing_data.train.3$SalePrice/1000, housing_predict/1000,
+     xlab = "Actual Sale Price",
+     ylab = "Predicted Sale Price")
+hist(housing_predict/1000)
+hist(housing_data.train.3$SalePrice/1000)
 ```
