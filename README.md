@@ -1,12 +1,29 @@
-# STAT206-Final-Project
+# Predicting Sale Price of Houses in Ames,IA with Linear Models
+
+## STAT206-Final-Project
+
+## Group Members
+
+Maile Kamada
+Kevin Sanford
+Harshaan Sall
+
+## Summary
+
+Based on features of houses in Ames,IA including neighborhood, lot size and around 80 other features,
+we aim to model the final sale price of those houses. Using pre-processing analysis with Q-Q plots and t tests,
+we can better prepare the data to produce a more accurate model. In our analysis, we reached a 75% correlation
+between our training data and the actual sale price.
+
+### Required Packages
+
+* base R packages
+* tidyverse
 
 
-1. create working branch off of development in RStudio
-2. when done, commit changes
-  a.git commit -am"message here"
-3. push changes to your remote branch
-  a.git push
-4. create pull request in GitHub and add the group as reviewers
-5. once PR is approved, merge into development branch
+## Acknowledgments
 
-6. once project is complete, create PR and merge into master branch
+Inspiration, code snippets, etc.
+* [Kaggle Dataset](https://www.kaggle.com/datasets/marcopale/housing/data)
+* [Kaggle Competition](https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques/data)
+* [Sample Code Analysis](https://sjmiller8182.github.io/RegressionHousingPrices/analysis/data/)
