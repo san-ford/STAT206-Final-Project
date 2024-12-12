@@ -1,7 +1,7 @@
 ---
-title: "Final Project Title"
+title: "Predicting Sale Price of Houses in Ames, IA with Linear Models"
 author: "Kevin Sanford, Maile Kamada, and Harshaan Sall"
-date: "12-6-2024"
+date: "12-13-2024"
 format:
   html:
     toc: true
