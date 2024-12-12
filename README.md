@@ -1,8 +1,4 @@
----
-editor_options: 
-  markdown: 
-    wrap: 72
----
+
 
 # Predicting Sale Price of Houses in Ames, IA with Linear Models
 
