@@ -15,21 +15,6 @@ editor: visual
 
 ## Introduction
 
----
-title: "Final Project Title"
-author: "Kevin Sanford, Maile Kamada, and Harshaan Sall"
-date: "12-6-2024"
-format:
-  html:
-    toc: true
-    toc-location: left
-    embed-resources: true
-    code-line-numbers: true
-  pdf:
-    code-line-numbers: true
-editor: visual
----
-
 ```{r}
 library(tidyverse)
 ```
