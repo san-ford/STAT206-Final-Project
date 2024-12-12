@@ -1,7 +1,7 @@
 ---
-title: "Final Project Title"
+title: "Predicting Sale Price of Houses in Ames, IA with Linear Models"
 author: "Kevin Sanford, Maile Kamada, and Harshaan Sall"
-date: "12-6-2024"
+date: "12-13-2024"
 format:
   html:
     toc: true
@@ -12,34 +12,34 @@ format:
     code-line-numbers: true
 editor: visual
 ---
+
+## Introduction
+
+We intend to use linear regression techniques to approach the exercise in the Kaggle competition found at [https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques](https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques/data). The exercise provides a large data sets that describes houses in Ames, Iowa with 79 parameters. The goal of the exercise is to create an algorithm that predicts the selling price of homes based on the parameters. The data provided consists of two data sets: test.csv and train.csv. The training data set includes housing prices to facilitate the creation of a linear regression model that predicts sale prices of homes, which can then be tested on the test data set. Before using the test data set, we will attempt to maximize the accuracy of the model by splitting the training data in half, using half of the data for training, then comparing the other half with the model's prediction. After tuning the model, we will retrain it on the full training data set and predict housing prices for the test data set.
+
+## Data Analysis
+
+### Import Data and Necessary Packages
+
 ```{r}
 library(tidyverse)
 ```
 
-## Introduction
-
-We intend to use linear regression techniques to approach the exercise in the Kaggle competition found at [https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques](https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques/data). The exercise provides a large data sets that describes houses in Ames, Iowa with 79 parameters. The goal of the exercise is to create an algorithm that predicts the selling price of homes based on the parameters. The data provided consists of two data sets: test.csv and train.csv. The training data set includes housing prices to facilitate the creation of a linear regression model that predicts sale prices of homes, which can then be tested on the test data set. Before using the test data set, we will attempt to maximize the accuracy of the model by splitting the training data in half, using half of the data for training, then comparing the other half with the model's prediction. After tuning the model, we will retrain it on the full training data set and predict housing prices for the test data set. We begin by importing the data sets and previewing them.
-
 ```{r}
 # check out data structure
 housing_data.train <- read.csv("train.csv")
-housing_data.test <- read.csv("test.csv")
 head(housing_data.train)
-head(housing_data.test)
 ```
 
-
-We also want to know the dimensions and summary of the data sets.
-
+### View Summary of Data
 
 ```{r}
 dim(housing_data.test)
-dim(housing_data.train)
 
 summary(housing_data.train)
 ```
 
-Next, we look at some plots of the data.
+### Continuous Fields - Visualize Data with R Plots
 
 ```{r}
 # some numerical plots
@@ -64,7 +64,10 @@ plot(housing_data.train$GrLivArea,
      xlab = "Living Area Square Feet",
      ylab = "Sale Price")
 ```
-Now we'll use ggplot2 to plot the same data with median sale price and trendlines with standard error.
+
+### Continuous Fields - Visualize Data with ggplot2
+
+We can view the data with the median sale price, as well as the trend lines with standard error.
 
 ```{r}
 # some numerical plots using ggplot2
@@ -122,6 +125,8 @@ ggplot(housing_data.train,
 
 These plots show some positive correlation, suggesting that several factors are important for the cost of a home in Ames. Now we look at some categorical factors that may also affect the cost.
 
+### Categorical Fields - Visualize Data with R Plots
+
 ```{r}
 #explore categorical fields
 plot(factor(housing_data.train$Neighborhood),
@@ -141,7 +146,10 @@ plot(factor(housing_data.train$BldgType),
      xlab = "Building Type",
      ylab = "Sale Price")
 ```
+
 Now we use ggplot2 to to combine some of the numerical and categorical plots
+
+### Categorical Fields - Visualize Data with ggplot2
 
 ```{r}
 # combine plots of different variables with ggplot
@@ -274,21 +282,24 @@ ggplot(housing_data.train,
        title = "Building Type vs. Sale Price",
        color = "Building Type")
 ```
+
 Some of the data from the plots are not insightful. We can see that the home prices in certain neighborhoods have changed over time and some have not. Some neighborhoods have very few data points, illustrating the fact that no one variable can be relied upon too heavily when predicting housing prices.
 
-## Creating a Linear Regression Model
+## Prepare Data for the Model
 
 First, we split the training data and use half of it to train a linear regression model. When the model is trained, we can test its accuracy with the other half.
 
 ```{r}
-# split the test data set in half
+# split the train data set in half
 housing_data.train.1 <- housing_data.train[1:730,]
 housing_data.train.2 <- housing_data.train[731:1460,]
 head(housing_data.train.1)
 head(housing_data.train.2)
 ```
 
-Now we check to ensure the Sale Price has normal distribution
+### Ensure Normal Distribution
+
+Now we check to ensure the Sale Price has normal distribution. We do this by viewing Q-Q plot. If the data follows a linear pattern with the trend line, then it has a normal distribution. If not, then we need to transform the data to ensure normal distribution.
 
 ```{r}
 #view Q-Q plot to check if Sale Price has a normal distribution
@@ -296,7 +307,7 @@ qqnorm(housing_data.train.1$SalePrice)
 qqline(housing_data.train.1$SalePrice)
 ```
 
-Apply log function to ensure normal dist
+Since the data does not follow normal distribution, we can apply the log function transform the data. This follows the paper we are references for this project.
 
 ```{r}
 #apply log to the sale price like in the source paper to ensure normal dist
@@ -304,7 +315,11 @@ qqnorm(log(housing_data.train.1$SalePrice))
 qqline(log(housing_data.train.1$SalePrice))
 ```
 
-Use T test to see which variables are significant
+### Tests for Significant Variables
+
+#### T Tests
+
+As shown in lecture, we can view which variables are significant using a t test `t.test()`. Below, we use the Neighborhood field as an example. We can see which neighborhood will be more significant in our model. We also apply the t test on the Lot Area field, also removing the outliers of any houses over 50,000 sq ft.
 
 ```{r}
 # check to make sure certain variables are significant
@@ -317,9 +332,13 @@ t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 
 t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 'Somerst']))
 t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 'StoneBr']))
 t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$LotArea < 50000]))
+t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$GrLivArea]))
 
 ```
-Measure correlation between sale price and variables to determine their significance
+
+#### Correlation
+
+Another way to measure significance is to use correlation `cor()`. We apply the correlation function on various fields in our data. The higher the correlation, the more significant the variable is.
 
 ```{r}
 print("Correlation between sale price and lot area:")
@@ -345,72 +364,85 @@ cor(log(housing_data.train.1$SalePrice),
 print("Correlation between sale price and basement size:")
 cor(log(housing_data.train.1$SalePrice),
     housing_data.train.1$TotalBsmtSF)
-
-print("Correlation between sale price and basement size:")
-cor(log(housing_data.train.1$SalePrice),
-    housing_data.train.1$X1stFlrSF)
 ```
-Living room area and basement size seem to be one the highest correlated factors with sale price.
 
-Apply lm to lot area
+Based on these tests, the living room area, basement size, neighborhood, and seem to be one the highest correlated factors with sale price.
+
+## Apply Linear Regression Model
+
+First, we apply the `lm()` function to the living room area, which was shown to be a significant factor in the house sale price.
 
 ```{r}
 #apply lm to lot area 
-housing.lm <- lm(log(housing_data.train.1$SalePrice) ~  housing_data.train.1$LotArea ,data=housing_data.train.1)
+housing.lm <- lm(log(housing_data.train.1$SalePrice) ~  housing_data.train.1$GrLivArea ,data=housing_data.train.1)
 
 housing.lm
 plot(housing.lm)
 ```
 
-We an see that the Residuals vs fitted is not straight, try to remove outliers
+### Remove Outliers
 
-```{r}
-#remove outliers
-housing_data.train.noout <- housing_data.train.1[housing_data.train.1$LotArea < 50000,]
+In lecture, we learned to check the Residuals vs Fitted chart to see if the model needs adjusting. The red trend line should move along the dotted line in the chart. Since this is not the case, we can try removing outliers in the living room area and the sale price to enhance the model. We can also include the other significant fields to improve our model.
 
-housing.lm.2 <- lm(log(housing_data.train.1$SalePrice) ~  housing_data.train.1$LotArea ,data=housing_data.train.noout)
-
-housing.lm.2
-plot(housing.lm.2)
-```
-
-Try adding in other features
 ```{r}
 #remove outliers in sale price
-housing_data.train.noout <- housing_data.train.noout[housing_data.train.noout$SalePrice < 400000,]
+#housing_data.train.noout <- housing_data.train.noout[housing_data.train.noout$SalePrice < 400000,]
 
 #remove outliers in living room area
-housing_data.train.noout <- housing_data.train.noout[housing_data.train.noout$GrLivArea < 4000,]
+housing_data.train.noout <- housing_data.train.1[housing_data.train.1$LotArea < 10000,]
 
 housing.lm.3 <- lm(log(housing_data.train.noout$SalePrice)
-                   ~ + housing_data.train.noout$GrLivArea
+                   ~ 
+                     + log(housing_data.train.noout$GrLivArea)
                    + housing_data.train.noout$TotalBsmtSF
                    + housing_data.train.noout$Neighborhood
-                   + housing_data.train.noout$LotArea,
+                   + log(housing_data.train.noout$LotArea),
+               
                    data = housing_data.train.noout)
 housing.lm.3
 plot(housing.lm.3)
 ```
-Now we'll create a prediction with the other half of the training data set
+
+We can see that the red line in the Residuals vs Fitted chart follow a straight line.
+
+Before we apply any predictions, let's view the summary of this model:
 
 ```{r}
 #view details of lm and predict sale price using the lm
 summary(housing.lm.3)
-# match dimensions
-housing_predict <- predict.lm(housing.lm.3, housing_data.train.2[1:704,])
 ```
 
-## Testing the Linear Model
+### Predict
+
+Now that we created a model, we can use the other half of the training data to predict the sale price with `predict.lm()`.
+
+```{r}
+# match dimensions
+total_row <- nrow(housing_data.train.noout)
+housing_predict <- predict.lm(housing.lm.3,housing_data.train.2[1:total_row,])
+
+```
+
+## Checking Our Prediction
+
+### Correlation
+
+Using correlation, we can see how accurate our model was with the actual sale price in the training data.
 
 ```{r}
 #see what the correlation is between the prediction and actuals
-cor(housing_data.train.2$SalePrice[1:704],housing_predict)
+actual_sale_price <- (housing_data.train.2$SalePrice[1:total_row] %/% 1000) * 1000
+predict_sale_price <- (exp(housing_predict) %/% 1000) * 1000
+
+cor(actual_sale_price,predict_sale_price)
 
 ```
 
+We can also visualize the plot between the actual sale price and the predictions from our model.
+
 ```{r}
 # visualize correlation
-plot(housing_data.train.2$SalePrice[1:704]/1000, exp(housing_predict)/1000,
+plot(actual_sale_price, predict_sale_price,
      xlab = "Actual Sale Price ($1000s)",
      ylab = "Predicted Sale Price ($1000s)")
 ```
