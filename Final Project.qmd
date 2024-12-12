@@ -51,10 +51,6 @@ plot(housing_data.train$LotArea,
      housing_data.train$SalePrice,
      xlab = "Lot Area",
      ylab = "Sale Price")
-plot(housing_data.train$LotArea[housing_data.train$LotArea < 50000],
-     housing_data.train$SalePrice[housing_data.train$LotArea < 50000],
-     xlab = "Lot Area",
-     ylab = "Sale Price")
 plot(housing_data.train$LotFrontage,
      housing_data.train$SalePrice,
      xlab = "Lot Frontage",
