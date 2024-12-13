@@ -15,7 +15,7 @@ editor: visual
 
 ## Introduction
 
-We intend to use linear regression techniques to approach the exercise in the Kaggle competition found at [https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques](https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques/data). The exercise provides a large data sets that describes houses in Ames, Iowa with 79 parameters. The goal of the exercise is to create an algorithm that predicts the selling price of homes based on the parameters. The data provided consists of two data sets: test.csv and train.csv. The training data set includes housing prices to facilitate the creation of a linear regression model that predicts sale prices of homes, which can then be tested on the test data set. Before using the test data set, we will attempt to maximize the accuracy of the model by splitting the training data in half, using half of the data for training, then comparing the other half with the model's prediction. After tuning the model, we will retrain it on the full training data set and predict housing prices for the test data set.
+We intend to use linear regression techniques to approach the exercise in the Kaggle competition found at [https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques](https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques/data). The exercise provides two large data sets that describes houses in Ames, Iowa with 79 parameters. The goal of the exercise is to create an algorithm that predicts the selling price of homes based on the parameters. The data provided consists of two data sets: test.csv and train.csv. The training data set includes housing prices to facilitate the creation of a linear regression model that predicts sale prices of homes, which can then be tested on the test data set. Before using the test data set, we will attempt to maximize the accuracy of the model by splitting the training data in half, using half of the data for training, then comparing the other half with the model's prediction. After tuning the model, we will retrain it on the full training data set and predict housing prices for the test data set.
 
 ## Data Analysis
 
@@ -291,7 +291,138 @@ Some of the data from the plots are not insightful. We can see that the home pri
 
 ## Prepare Data for the Model
 
-First, we split the training data and use half of it to train a linear regression model. When the model is trained, we can test its accuracy with the other half. Since the test data did not provide the sale price, we instead will use the second half of the training data as our "test".
+Some of the data is not useful, such as the "Utilities" column, which has all but one identical entries.
+
+```{r}
+# find entries that are different
+sum(housing_data.train$Utilities != "AllPub")
+
+# delete the Utilities column in both train and test data sets
+housing_data.train <- housing_data.train[, !(names(housing_data.train) %in% "Utilities")]
+housing_data.test <- housing_data.test[, !(names(housing_data.test) %in% "Utilities")]
+```
+
+Now we look for missing values
+
+```{r}
+# find total number of NA values in Lot Frontage column
+print("NA values in Lot Frontage:")
+sum(is.na(housing_data.train$LotFrontage))
+
+# find total number of NA values in Alley column
+print("NA values in Alley:")
+sum(is.na(housing_data.train$Alley))
+
+# find total number of NA values in MasVnrArea column
+print("NA values in MasVnrArea:")
+sum(is.na(housing_data.train$MasVnrArea))
+
+# find total number of NA values in Basement Quality column
+print("NA values in Basement Quality:")
+sum(is.na(housing_data.train$BsmtQual))
+
+# find total number of NA values in Basement Condition column
+print("NA values in Basement Condition:")
+sum(is.na(housing_data.train$BsmtCond))
+
+# find total number of NA values in Basement Exposure column
+print("NA values in Basement Exposure:")
+sum(is.na(housing_data.train$BsmtExposure))
+
+# find total number of NA values in Basement Finish Type 1 column
+print("NA values in Basement Finish Type 1:")
+sum(is.na(housing_data.train$BsmtFinType1))
+
+# find total number of NA values in Basement Finish Type 2 column
+print("NA values in Basement Finish Type 2:")
+sum(is.na(housing_data.train$BsmtFinType2))
+
+# find total number of NA values in Electrical column
+print("NA values in Electrical:")
+sum(is.na(housing_data.train$Electrical))
+
+# find total number of NA values in Fireplace Quality column
+print("NA values in Fireplace Quality:")
+sum(is.na(housing_data.train$FireplaceQu))
+
+# find total number of NA values in Garage Type column
+print("NA values in Garage Type:")
+sum(is.na(housing_data.train$GarageType))
+
+# find total number of NA values in Garage Year Built column
+print("NA values in Garage Year Built:")
+sum(is.na(housing_data.train$GarageYrBlt))
+
+# find total number of NA values in Garage Finish column
+print("NA values in Garage Finish:")
+sum(is.na(housing_data.train$GarageFinish))
+
+# find total number of NA values in Garage Quality column
+print("NA values in Garage Quality:")
+sum(is.na(housing_data.train$GarageQual))
+
+# find total number of NA values in Garage Condition column
+print("NA values in Garage Condition:")
+sum(is.na(housing_data.train$GarageCond))
+
+# find total number of NA values in Pool QC column
+print("NA values in Pool QC:")
+sum(is.na(housing_data.train$PoolQC))
+
+# find total number of NA values in Fence column
+print("NA values in Fence:")
+sum(is.na(housing_data.train$Fence))
+
+# find total number of NA values in Misc. Features column
+print("NA values in Misc. Features:")
+sum(is.na(housing_data.train$MiscFeature))
+```
+
+A column with too many missing values will not be useful to us. We remove columns with \> 100 missing values. For the others, replace NAs with "None."
+
+```{r}
+# remove columns with too many missing values
+housing_data.train <- housing_data.train[, !(names(housing_data.train) %in% c("LotFrontage", "Alley", "FireplaceQu", "PoolQC", "Fence", "MiscFeature"))]
+housing_data.test <- housing_data.test[, !(names(housing_data.test) %in% c("LotFrontage", "Alley", "FireplaceQu", "PoolQC", "Fence", "MiscFeature"))]
+
+# replace NAs with the mode
+housing_data.train$MasVnrArea[is.na(housing_data.train$MasVnrArea)] <- names(sort(-table(housing_data.train$MasVnrArea)))[1]
+
+# replace NAs with the mode
+housing_data.train$BsmtQual[is.na(housing_data.train$BsmtQual)] <- names(sort(-table(housing_data.train$BsmtQual)))[1]
+
+# replace NAs with the mode
+housing_data.train$BsmtCond[is.na(housing_data.train$BsmtCond)] <- names(sort(-table(housing_data.train$BsmtCond)))[1]
+
+# replace NAs with the mode
+housing_data.train$BsmtExposure[is.na(housing_data.train$BsmtExposure)] <- names(sort(-table(housing_data.train$BsmtExposure)))[1]
+
+# replace NAs with the mode
+housing_data.train$BsmtFinType1[is.na(housing_data.train$BsmtFinType1)] <- names(sort(-table(housing_data.train$BsmtFinType1)))[1]
+
+# replace NAs with the mode
+housing_data.train$BsmtFinType2[is.na(housing_data.train$BsmtFinType2)] <- names(sort(-table(housing_data.train$BsmtFinType2)))[1]
+
+# replace NAs with the mode
+housing_data.train$Electrical[is.na(housing_data.train$Electrical)] <- names(sort(-table(housing_data.train$Electrical)))[1]
+
+# replace NAs with the mode
+housing_data.train$GarageType[is.na(housing_data.train$GarageType)] <- names(sort(-table(housing_data.train$GarageType)))[1]
+
+# replace NAs with the mode
+housing_data.train$GarageYrBlt[is.na(housing_data.train$GarageYrBlt)] <- names(sort(-table(housing_data.train$GarageYrBlt)))[1]
+
+# replace NAs with the mode
+housing_data.train$GarageFinish[is.na(housing_data.train$GarageFinish)] <- names(sort(-table(housing_data.train$GarageFinish)))[1]
+
+# replace NAs with the mode
+housing_data.train$GarageQual[is.na(housing_data.train$GarageQual)] <- names(sort(-table(housing_data.train$GarageQual)))[1]
+
+# replace NAs with the mode
+housing_data.train$GarageCond[is.na(housing_data.train$GarageCond)] <- names(sort(-table(housing_data.train$GarageCond)))[1]
+```
+
+Now, we split the training data and use half of it to train a linear regression model. When the model is trained, we can test its accuracy with the other half. Since the test data did not provide the sale price, we instead will use the second half of the training data as our "test".
 
 ```{r}
 # split the train data set in half
@@ -339,7 +470,7 @@ t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 
 t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 'StoneBr']))
 ```
 
-We also apply the `t.test()` on the Lot Area field also removing the outliers of any houses over 50,000 sq ft.
+A small p-value in these t-tests show that the neighborhood affects the sale price, so we should include neighborhood data in our model. We also apply the `t.test()` on the Lot Area field while removing the outliers of any houses over 50,000 sq ft.
 
 ```{r}
 t.test (log(housing_data.train.1$SalePrice))
@@ -352,6 +483,10 @@ t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$GrLivArea]))
 Another way to measure significance is to use correlation `cor()`. We apply the correlation function on various fields in our data. The higher the correlation, the stronger the relationship is between the variable and the sale price.
 
 ```{r}
+print("Correlation between sale price and overall quality:")
+cor(log(housing_data.train.1$SalePrice),
+    housing_data.train.1$OverallQual)
+
 print("Correlation between sale price and lot area:")
 cor(log(housing_data.train.1$SalePrice),
     housing_data.train.1$LotArea)
@@ -377,7 +512,62 @@ cor(log(housing_data.train.1$SalePrice),
     housing_data.train.1$TotalBsmtSF)
 ```
 
-Based on these tests, the living room area, basement size, neighborhood, and seem to be one the highest correlated factors with sale price.
+Overall quality score has the highest correlation with sale price. Living room area, garage area, and floor sizes seem to be some of the other highest correlated factors with sale price. Now we check if these are normal distributions.
+
+```{r}
+# view Q-Q plot of overall quality
+qqnorm(housing_data.train.1$OverallQual)
+qqline(housing_data.train.1$OverallQual)
+
+# view Q-Q plot of living room size
+qqnorm(housing_data.train.1$GrLivArea)
+qqline(housing_data.train.1$GrLivArea)
+
+# view Q-Q plot of garage size, remove zeros
+qqnorm(housing_data.train.1$GarageArea[housing_data.train.1$GarageArea > 0])
+qqline(housing_data.train.1$GarageArea[housing_data.train.1$GarageArea > 0])
+
+# view Q-Q plot of basement size, remove zeros
+qqnorm(housing_data.train.1$TotalBsmtSF[housing_data.train.1$TotalBsmtSF > 0])
+qqline(housing_data.train.1$TotalBsmtSF[housing_data.train.1$TotalBsmtSF > 0])
+
+# view Q-Q plot of 1st floor size
+qqnorm(housing_data.train.1$X1stFlrSF)
+qqline(housing_data.train.1$X1stFlrSF)
+
+# view Q-Q plot of 2nd floor size, remove zeros
+qqnorm(housing_data.train.1$X2ndFlrSF[housing_data.train.1$X2ndFlrSF > 0])
+qqline(housing_data.train.1$X2ndFlrSF[housing_data.train.1$X2ndFlrSF > 0])
+```
+
+Now we apply the log function to find normal distribution
+
+```{r}
+# apply log to overall quality
+qqnorm(log(housing_data.train.1$OverallQual))
+qqline(log(housing_data.train.1$OverallQual))
+
+# apply log to living room size
+qqnorm(log(housing_data.train.1$GrLivArea))
+qqline(log(housing_data.train.1$GrLivArea))
+
+# apply log to garage size without zeros
+qqnorm(log(housing_data.train.1$GarageArea[housing_data.train.1$GarageArea > 0]))
+qqline(log(housing_data.train.1$GarageArea[housing_data.train.1$GarageArea > 0]))
+
+# apply log to basement size without zeros
+qqnorm(log(housing_data.train.1$TotalBsmtSF[housing_data.train.1$TotalBsmtSF > 0]))
+qqline(log(housing_data.train.1$TotalBsmtSF[housing_data.train.1$TotalBsmtSF > 0]))
+
+# apply log to 1st floor size
+qqnorm(log(housing_data.train.1$X1stFlrSF))
+qqline(log(housing_data.train.1$X1stFlrSF))
+
+# apply log to 2nd floor size without zeros
+qqnorm(log(housing_data.train.1$X2ndFlrSF[housing_data.train.1$X2ndFlrSF > 0]))
+qqline(log(housing_data.train.1$X2ndFlrSF[housing_data.train.1$X2ndFlrSF > 0]))
+```
+It seems like the log function of living room area, garage area, and 1st floor area are good fits to a normal distribution. Overall quality fits a normal distribution best without a log function.
 
 ## Apply Linear Regression Model
 
@@ -397,21 +587,27 @@ In lecture, we learned to check the Residuals vs Fitted chart to see if the mode
 
 ```{r}
 #remove outliers in sale price
-#housing_data.train.noout <- housing_data.train.noout[housing_data.train.noout$SalePrice < 400000,]
+#housing_data.train.noout <- housing_data.train.1[housing_data.train.1$SalePrice < 350000,]
 
 #remove outliers in living room area
-housing_data.train.noout <- housing_data.train.1[housing_data.train.1$LotArea < 50000,]
+housing_data.train.noout <- housing_data.train.noout[housing_data.train.noout$GrLivArea < 3000,]
 
-housing.lm.3 <- lm(log(housing_data.train.noout$SalePrice)
-                   ~ 
-                     + log(housing_data.train.noout$GrLivArea)
-                   + housing_data.train.noout$TotalBsmtSF
+# remove outliers in garage area
+housing_data.train.noout <- housing_data.train.noout[housing_data.train.noout$GarageArea > 0,]
+
+housing.lm.2 <- lm(log(housing_data.train.noout$SalePrice)
+                   ~ housing_data.train.noout$OverallQual
                    + housing_data.train.noout$Neighborhood
-                   + log(housing_data.train.noout$LotArea),
-               
+                   + housing_data.train.noout$YearBuilt
+                   + housing_data.train.noout$YearRemodAdd
+                   + housing_data.train.noout$TotalBsmtSF
+                   + log(housing_data.train.noout$X1stFlrSF)
+                   + housing_data.train.noout$X2ndFlrSF
+                   + log(housing_data.train.noout$GrLivArea)
+                   + log(housing_data.train.noout$GarageArea),
                    data = housing_data.train.noout)
-housing.lm.3
-plot(housing.lm.3)
+housing.lm.2
+plot(housing.lm.2)
 ```
 
 We can see that the red line in the Residuals vs Fitted chart follow a straight line, which means that our adjustments worked!
@@ -420,7 +616,7 @@ Before we apply any predictions, let's view the `summary()` of this model:
 
 ```{r}
 #view details of lm and predict sale price using the lm
-summary.lm(housing.lm.3)
+summary.lm(housing.lm.2)
 ```
 
 ### Predict
@@ -430,7 +626,7 @@ Now that we created a model, we can use the other half of the training data to p
 ```{r}
 # match dimensions
 total_row <- nrow(housing_data.train.noout)
-housing_predict <- predict.lm(housing.lm.3,housing_data.train.2[1:total_row,])
+housing_predict <- predict.lm(housing.lm.2,housing_data.train.2[1:total_row,])
 
 ```
 
