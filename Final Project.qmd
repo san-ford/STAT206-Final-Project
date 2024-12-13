@@ -30,6 +30,7 @@ library(tidyverse)
 ```{r}
 # check out data structure
 housing_data.train <- read.csv("train.csv")
+housing_data.test <- read.csv("test.csv")
 head(housing_data.train)
 ```
 
@@ -598,7 +599,7 @@ In lecture, we learned to check the Residuals vs Fitted chart to see if the mode
 
 ```{r}
 #remove outliers in sale price
-#housing_data.train.noout <- housing_data.train.1[housing_data.train.1$SalePrice < 350000,]
+housing_data.train.noout <- housing_data.train.1[housing_data.train.1$SalePrice < 350000,]
 
 #remove outliers in living room area
 housing_data.train.noout <- housing_data.train.noout[housing_data.train.noout$GrLivArea < 3000,]
