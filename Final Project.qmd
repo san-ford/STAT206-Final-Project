@@ -718,13 +718,19 @@ Now, we will train the random forest model.
 
 ```{r}
 library(randomForest)
+
+# Filter dataset to include only numerical predictors and the target variable
+numerical_cols <- sapply(housing_data.train.1, is.numeric)  # Identify numerical columns
+numerical_data <- housing_data.train.1[, numerical_cols]    # Subset only numerical columns
+numerical_data$SalePrice <- housing_data.train.1$SalePrice  # Ensure the target variable is included
+
 # Train the Random Forest model
 set.seed(123)  # For reproducibility
 rf_model <- randomForest(
-  SalePrice ~ .,          # Use all other columns as predictors
-  data = housing_data.train.1,
+  SalePrice ~ .,          # Use all numerical predictors
+  data = numerical_data,
   ntree = 500,            # Number of trees
-  mtry = floor(sqrt(ncol(housing_data.train.1) - 1)),  # Number of features per split
+  mtry = floor(sqrt(ncol(numerical_data) - 1)),  # Number of features per split
   importance = TRUE       # Calculate feature importance
 )
 
