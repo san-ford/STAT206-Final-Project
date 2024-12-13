@@ -15,7 +15,9 @@ editor: visual
 
 ## Introduction
 
-We intend to use linear regression techniques to approach the exercise in the Kaggle competition found at [https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques](https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques/data). The exercise provides two large data sets that describes houses in Ames, Iowa with 79 parameters. The goal of the exercise is to create an algorithm that predicts the selling price of homes based on the parameters. The data provided consists of two data sets: test.csv and train.csv. The training data set includes housing prices to facilitate the creation of a linear regression model that predicts sale prices of homes, which can then be tested on the test data set. Before using the test data set, we will attempt to maximize the accuracy of the model by splitting the training data in half, using half of the data for training, then comparing the other half with the model's prediction. After tuning the model, we will retrain it on the full training data set and predict housing prices for the test data set.
+We intend to use linear regression techniques to approach the exercise in the Kaggle competition found at [https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques](https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques/data). The exercise provides two large data sets that describes houses in Ames, Iowa with 79 parameters. The goal of the exercise is to create an algorithm that predicts the selling price of homes based on the parameters. The data provided consists of two data sets: test.csv and train.csv. The training data set includes housing prices to facilitate the creation of a linear regression model that predicts sale prices of homes, which can then be tested on the test data set. Before using the test data set, we will attempt to maximize the accuracy of the model by splitting the training data in half, using half of the data for training, then comparing the other half with the model's prediction. After tuning the model, we will retrain it on the full training data set and predict housing prices for the test data set.We begin by importing the data sets and previewing them.
+
+In addition to the linear regression model, we will be training a Random Forest model. Random Forest is an ensemble learning technique that builds multiple decision trees and combines their outputs to capture complex, non-linear relationships in the data. To evaluate its performance, we will split the training data in half, using one half for training and the other for validation, measuring performance with metrics such as RMSE and R-squared. 
 
 ## Data Analysis
 
@@ -36,8 +38,6 @@ head(housing_data.train)
 Using `summary()` with our data, we can see specific characteristics of the fields with numeric values, such as LotArea and GrLivArea. We can see statistics which will help us tune our model by potentially removing outliers if needed.
 
 ```{r}
-dim(housing_data.test)
-
 summary(housing_data.train)
 ```
 
@@ -69,7 +69,7 @@ plot(housing_data.train$GrLivArea,
 
 We can view the data with the median sale price, as well as the trend lines with standard error.
 
-With `ggplot2()` we can take a closer look at the continuous fields.
+With `ggplot2()` we can take a closer look at the continuous fields for a more enhanced visualization. `geom_point()` creates a scatter plot of our data. `geom_hline()` creates a reference line using the median value of the sale price. `geom_smooth()` creates a shading around the reference depending on the method parameter provided. With these extra features, we have a better idea of how the data is distributed.
 
 ```{r}
 # some numerical plots using ggplot2
@@ -155,6 +155,8 @@ Now we use ggplot2 to to combine some of the numerical and categorical plots
 
 ### Categorical Fields - Visualize Data with ggplot2
 
+We apply the same `ggplot2()` plots to the categorical fields as we did with the continuous fields.
+
 ```{r}
 # combine plots of different variables with ggplot
 # plot year built vs sale price with different neighbrhoods colored
@@ -207,7 +209,9 @@ housing_data.train %>%
   labs(y = "Sale Price ($1000's)",
        x = "Year Built",
        title = "Year Built vs. Sale Price in Each Neighborhood")
+```
 
+```{r}
 housing_data.train %>%
   filter(Neighborhood != "Blmngtn") %>%
   filter(Neighborhood != "Blueste") %>%
@@ -234,7 +238,9 @@ housing_data.train %>%
   labs(y = "Sale Price ($1000's)",
        x = "Year Built",
        title = "Year Built vs. Sale Price in Each Neighborhood")
+```
 
+```{r}
 housing_data.train %>%
   filter(Neighborhood != "Blmngtn") %>%
   filter(Neighborhood != "Blueste") %>%
@@ -263,7 +269,9 @@ housing_data.train %>%
   labs(y = "Sale Price ($1000's)",
        x = "Year Built",
        title = "Year Built vs. Sale Price in Each Neighborhood")
+```
 
+```{r}
 # plot year built vs sale price for each building type
 housing_data.train %>%
   ggplot(aes(YearBuilt, SalePrice/1000, color = BldgType)) +
@@ -273,7 +281,9 @@ housing_data.train %>%
        x = "Year Built",
        title = "Year Built vs. Sale Price",
        color = "Building Type")
+```
 
+```{r}
 # plot building type vs sale price, separated by street type
 ggplot(housing_data.train,
         aes(x = Street,
@@ -612,6 +622,17 @@ plot(housing.lm.2)
 
 We can see that the red line in the Residuals vs Fitted chart follow a straight line, which means that our adjustments worked!
 
+```{r}
+#remove outliers in sale price
+
+#housing_data.train.noout <- housing_data.train.1[housing_data.train.1$LotArea < 50000,]
+
+#housing.lm.3 <- lm(log(housing_data.train.1$SalePrice)
+               #    ~ .,data = housing_data.train.1)
+#housing.lm.3
+#plot(housing.lm.3)
+```
+
 Before we apply any predictions, let's view the `summary()` of this model:
 
 ```{r}
@@ -653,3 +674,123 @@ plot(actual_sale_price, predict_sale_price,
      xlab = "Actual Sale Price ($1000s)",
      ylab = "Predicted Sale Price ($1000s)")
 ```
+
+Random Forest Model
+Load in the dataset for preprocessing before training the random forest model. 
+```{r}
+# split the train data set in half
+housing_data.train.1 <- housing_data.train[1:730,]
+housing_data.test.1 <- housing_data.train[731:1460,]
+head(housing_data.train.1)
+head(housing_data.test.1 )
+```
+```{r}
+# Check for missing values in each column
+colSums(is.na(housing_data.train.1))
+colSums(is.na(housing_data.test.1))
+```
+
+```{r}
+# Identify numeric columns
+numeric_cols <- sapply(housing_data.train.1, is.numeric)
+
+# Impute missing numeric values with the median
+for (col in names(housing_data.train.1)[numeric_cols]) {
+  if (all(is.na(housing_data.train.1[[col]]))) {
+    housing_data.train.1[[col]][is.na(housing_data.train.1[[col]])] <- 0
+    housing_data.test.1[[col]][is.na(housing_data.test.1[[col]])] <- 0
+  } else {
+    median_value <- median(housing_data.train.1[[col]], na.rm = TRUE)
+    housing_data.train.1[[col]][is.na(housing_data.train.1[[col]])] <- median_value
+    housing_data.test.1[[col]][is.na(housing_data.test.1[[col]])] <- median_value
+  }
+}
+```
+```{r}
+# Identify categorical columns
+categorical_cols <- sapply(housing_data.train.1, is.character)
+
+# Impute missing categorical values with "Other"
+for (col in names(housing_data.train.1)[categorical_cols]) {
+  housing_data.train.1[[col]][is.na(housing_data.train.1[[col]])] <- "Other"
+  housing_data.test.1[[col]][is.na(housing_data.test.1[[col]])] <- "Other"
+
+  # Convert to factors and align levels
+  housing_data.train.1[[col]] <- factor(housing_data.train.1[[col]])
+  housing_data.test.1[[col]] <- factor(housing_data.test.1[[col]], levels = levels(housing_data.train.1[[col]]))
+}
+```
+
+Now, we will train the random forest model. 
+
+```{r}
+library(randomForest)
+# Train the Random Forest model
+set.seed(123)  # For reproducibility
+rf_model <- randomForest(
+  SalePrice ~ .,          # Use all other columns as predictors
+  data = housing_data.train.1,
+  ntree = 500,            # Number of trees
+  mtry = floor(sqrt(ncol(housing_data.train.1) - 1)),  # Number of features per split
+  importance = TRUE       # Calculate feature importance
+)
+
+# View model summary
+print(rf_model)
+```
+```{r}
+# Predict on the test dataset
+rf_predictions <- predict(rf_model, newdata = housing_data.test.1)
+# Check for missing or invalid predictions
+summary(rf_predictions)
+```
+```{r}
+# Filter out NA predictions
+valid_indices <- !is.na(rf_predictions)  # Get indices of non-NA predictions
+filtered_predictions <- rf_predictions[valid_indices]
+filtered_actuals <- housing_data.test.1$SalePrice[valid_indices]
+```
+```{r}
+library(Metrics)
+
+# Calculate RMSE
+rmse_value <- rmse(filtered_actuals, filtered_predictions)
+
+# Calculate the average sale price
+average_sale_price <- mean(filtered_actuals)
+
+# Print RMSE and the average sale price
+cat("RMSE:", rmse_value, "\n")
+cat("Average Sale Price:", average_sale_price, "\n")
+
+# Calculate RMSE as a percentage of the average sale price
+rmse_percentage <- (rmse_value / average_sale_price) * 100
+cat("RMSE as Percentage of Average Sale Price:", rmse_percentage, "%\n")
+```
+```{r}
+# Calculate R²
+rsq_value <- 1 - sum((filtered_actuals - filtered_predictions)^2) / 
+                 sum((filtered_actuals - mean(filtered_actuals))^2)
+cat("R²:", rsq_value, "\n")
+```
+
+Given these metrics, we see the Random Forest model performed well with an R-squared value of .856. This indicated that the model explains around 85% of the variance in the prices of the homes and essentially captures a majority of the patterns. For the RMSE value of $29,299.79, this indicated that on average the models predictions differ from the actual values by this amount. Given that this is only 16.37% of the average sales price, this indicates a good performing model. 
+
+```{r}
+plot_data <- data.frame(
+  Actual = filtered_actuals,
+  Predicted = filtered_predictions
+)
+
+# Create the scatter plot
+ggplot(plot_data, aes(x = Actual, y = Predicted)) +
+  geom_point(color = "blue", alpha = 0.6) +  # Scatter points
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +  # 45-degree line
+  labs(
+    title = "Predicted vs. Actual Housing Prices",
+    x = "Actual Sale Prices",
+    y = "Predicted Sale Prices"
+  ) +
+  theme_minimal()
+```
+
