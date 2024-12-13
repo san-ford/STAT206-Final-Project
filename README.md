@@ -14,7 +14,7 @@
 
 We intend to use linear regression techniques to approach the exercise in the Kaggle competition found at 
 [https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques](https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques/data). 
-The exercise provides a large data sets that describes houses in Ames, Iowa with 79 parameters. The goal of 
+The exercise provides two large data sets that describe houses in Ames, Iowa with 79 parameters. The goal of 
 the exercise is to create an algorithm that predicts the selling price of homes based on the parameters. The 
 data provided consists of two data sets: test.csv and train.csv. The training data set includes housing prices 
 to facilitate the creation of a linear regression model that predicts sale prices of homes, which can then be 
