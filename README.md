@@ -1,5 +1,4 @@
 
-
 # Predicting Sale Price of Houses in Ames, IA with Linear Models
 
 ## STAT206-Final-Project Due: 12/13/2024
