@@ -33,6 +33,8 @@ head(housing_data.train)
 
 ### View Summary of Data
 
+Using `summary()` with our data, we can see specific characteristics of the fields with numeric values, such as LotArea and GrLivArea. We can see statistics which will help us tune our model by potentially removing outliers if needed.
+
 ```{r}
 dim(housing_data.test)
 
@@ -40,6 +42,8 @@ summary(housing_data.train)
 ```
 
 ### Continuous Fields - Visualize Data with R Plots
+
+To further view the continuous fields in our data, we plotted the values of those fields compared to the sale price. By plotting the data, we can better visualize any outliers. For example, in the plot for Lot Area, we can see that most of the values are less than 50000, so it is safe to assume that any houses above that area will probably affect our model negatively.
 
 ```{r}
 # some numerical plots
@@ -64,6 +68,8 @@ plot(housing_data.train$GrLivArea,
 ### Continuous Fields - Visualize Data with ggplot2
 
 We can view the data with the median sale price, as well as the trend lines with standard error.
+
+With `ggplot2()` we can take a closer look at the continuous fields.
 
 ```{r}
 # some numerical plots using ggplot2
@@ -122,6 +128,8 @@ ggplot(housing_data.train,
 These plots show some positive correlation, suggesting that several factors are important for the cost of a home in Ames. Now we look at some categorical factors that may also affect the cost.
 
 ### Categorical Fields - Visualize Data with R Plots
+
+We can also plot the data of categorical fields using `factor().` This function can be applied to categorical data to encode the character value and apply an integer to it for the count in the data. By plotting the factor, R creates a box plot to display the same values as the `summary()` did for the numeric fields.
 
 ```{r}
 #explore categorical fields
@@ -283,7 +291,7 @@ Some of the data from the plots are not insightful. We can see that the home pri
 
 ## Prepare Data for the Model
 
-First, we split the training data and use half of it to train a linear regression model. When the model is trained, we can test its accuracy with the other half.
+First, we split the training data and use half of it to train a linear regression model. When the model is trained, we can test its accuracy with the other half. Since the test data did not provide the sale price, we instead will use the second half of the training data as our "test".
 
 ```{r}
 # split the train data set in half
@@ -295,7 +303,7 @@ head(housing_data.train.2)
 
 ### Ensure Normal Distribution
 
-Now we check to ensure the Sale Price has normal distribution. We do this by viewing Q-Q plot. If the data follows a linear pattern with the trend line, then it has a normal distribution. If not, then we need to transform the data to ensure normal distribution.
+Now we check that the sale price has normal distribution, ensuring that we meet the assumptions to use the linear model. We do this by viewing Q-Q plot, with `qqnorm()` and `qqline()`. If the data follows a linear pattern with the qq line, then it has a normal distribution. If not, then we need to transform the data to ensure normal distribution.
 
 ```{r}
 #view Q-Q plot to check if Sale Price has a normal distribution
@@ -303,7 +311,7 @@ qqnorm(housing_data.train.1$SalePrice)
 qqline(housing_data.train.1$SalePrice)
 ```
 
-Since the data does not follow normal distribution, we can apply the log function transform the data. This follows the paper we are references for this project.
+Since the data does not follow normal distribution, we can apply the log function transform the data. This follows the same technique as the paper we are references for this project.
 
 ```{r}
 #apply log to the sale price like in the source paper to ensure normal dist
@@ -313,9 +321,11 @@ qqline(log(housing_data.train.1$SalePrice))
 
 ### Tests for Significant Variables
 
+Now that we know our data has a normal distribution, we can apply hypothesis testing such as `t.test()` and correlation `cor().`
+
 #### T Tests
 
-As shown in lecture, we can view which variables are significant using a t test `t.test()`. Below, we use the Neighborhood field as an example. We can see which neighborhood will be more significant in our model. We also apply the t test on the Lot Area field, also removing the outliers of any houses over 50,000 sq ft.
+As shown in lecture, we can view which variables are significant using a t test `t.test()`. In the output, if the p-value is low, then we can assume that the variable has statistical significance. Below, we use the Neighborhood field as an example. We can see which neighborhood will be more significant in our model.
 
 ```{r}
 # check to make sure certain variables are significant
@@ -327,14 +337,19 @@ t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 
 t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 'NridgHt']))
 t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 'Somerst']))
 t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$Neighborhood == 'StoneBr']))
+```
+
+We also apply the `t.test()` on the Lot Area field also removing the outliers of any houses over 50,000 sq ft.
+
+```{r}
+t.test (log(housing_data.train.1$SalePrice))
 t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$LotArea < 50000]))
 t.test (log(housing_data.train.1$SalePrice[housing_data.train.1$GrLivArea]))
-
 ```
 
 #### Correlation
 
-Another way to measure significance is to use correlation `cor()`. We apply the correlation function on various fields in our data. The higher the correlation, the more significant the variable is.
+Another way to measure significance is to use correlation `cor()`. We apply the correlation function on various fields in our data. The higher the correlation, the stronger the relationship is between the variable and the sale price.
 
 ```{r}
 print("Correlation between sale price and lot area:")
@@ -366,11 +381,11 @@ Based on these tests, the living room area, basement size, neighborhood, and see
 
 ## Apply Linear Regression Model
 
-First, we apply the `lm()` function to the living room area, which was shown to be a significant factor in the house sale price.
+First, we apply the `lm()` function to the living room area, which was shown to be a significant factor in the house sale price. This function will fit the linear model provided the data given.
 
 ```{r}
 #apply lm to lot area 
-housing.lm <- lm(log(housing_data.train.1$SalePrice) ~  housing_data.train.1$GrLivArea ,data=housing_data.train.1)
+housing.lm <- lm(log(housing_data.train.1$SalePrice) ~  housing_data.train.1$LotArea ,data=housing_data.train.1)
 
 housing.lm
 plot(housing.lm)
@@ -385,7 +400,7 @@ In lecture, we learned to check the Residuals vs Fitted chart to see if the mode
 #housing_data.train.noout <- housing_data.train.noout[housing_data.train.noout$SalePrice < 400000,]
 
 #remove outliers in living room area
-housing_data.train.noout <- housing_data.train.1[housing_data.train.1$LotArea < 10000,]
+housing_data.train.noout <- housing_data.train.1[housing_data.train.1$LotArea < 50000,]
 
 housing.lm.3 <- lm(log(housing_data.train.noout$SalePrice)
                    ~ 
@@ -401,7 +416,7 @@ plot(housing.lm.3)
 
 We can see that the red line in the Residuals vs Fitted chart follow a straight line.
 
-Before we apply any predictions, let's view the summary of this model:
+Before we apply any predictions, let's view the `summary()` of this model:
 
 ```{r}
 #view details of lm and predict sale price using the lm
