@@ -69,7 +69,7 @@ plot(housing_data.train$GrLivArea,
 
 We can view the data with the median sale price, as well as the trend lines with standard error.
 
-With `ggplot2()` we can take a closer look at the continuous fields.
+With `ggplot2()` we can take a closer look at the continuous fields for a more enhanced visualization. `geom_point()` creates a scatter plot of our data. `geom_hline()` creates a reference line using the median value of the sale price. `geom_smooth()` creates a shading around the reference depending on the method parameter provided. With these extra features, we have a better idea of how the data is distributed.
 
 ```{r}
 # some numerical plots using ggplot2
@@ -155,6 +155,8 @@ Now we use ggplot2 to to combine some of the numerical and categorical plots
 
 ### Categorical Fields - Visualize Data with ggplot2
 
+We apply the same `ggplot2()` plots to the categorical fields as we did with the continuous fields.
+
 ```{r}
 # combine plots of different variables with ggplot
 # plot year built vs sale price with different neighbrhoods colored
@@ -207,7 +209,9 @@ housing_data.train %>%
   labs(y = "Sale Price ($1000's)",
        x = "Year Built",
        title = "Year Built vs. Sale Price in Each Neighborhood")
+```
 
+```{r}
 housing_data.train %>%
   filter(Neighborhood != "Blmngtn") %>%
   filter(Neighborhood != "Blueste") %>%
@@ -234,7 +238,9 @@ housing_data.train %>%
   labs(y = "Sale Price ($1000's)",
        x = "Year Built",
        title = "Year Built vs. Sale Price in Each Neighborhood")
+```
 
+```{r}
 housing_data.train %>%
   filter(Neighborhood != "Blmngtn") %>%
   filter(Neighborhood != "Blueste") %>%
@@ -263,7 +269,9 @@ housing_data.train %>%
   labs(y = "Sale Price ($1000's)",
        x = "Year Built",
        title = "Year Built vs. Sale Price in Each Neighborhood")
+```
 
+```{r}
 # plot year built vs sale price for each building type
 housing_data.train %>%
   ggplot(aes(YearBuilt, SalePrice/1000, color = BldgType)) +
@@ -273,7 +281,9 @@ housing_data.train %>%
        x = "Year Built",
        title = "Year Built vs. Sale Price",
        color = "Building Type")
+```
 
+```{r}
 # plot building type vs sale price, separated by street type
 ggplot(housing_data.train,
         aes(x = Street,
