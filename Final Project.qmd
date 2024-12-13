@@ -384,8 +384,8 @@ Based on these tests, the living room area, basement size, neighborhood, and see
 First, we apply the `lm()` function to the living room area, which was shown to be a significant factor in the house sale price. This function will fit the linear model provided the data given.
 
 ```{r}
-#apply lm to lot area 
-housing.lm <- lm(log(housing_data.train.1$SalePrice) ~  housing_data.train.1$LotArea ,data=housing_data.train.1)
+#apply lm to living room area
+housing.lm <- lm(log(housing_data.train.1$SalePrice) ~  housing_data.train.1$GrLivArea ,data=housing_data.train.1)
 
 housing.lm
 plot(housing.lm)
@@ -414,13 +414,13 @@ housing.lm.3
 plot(housing.lm.3)
 ```
 
-We can see that the red line in the Residuals vs Fitted chart follow a straight line.
+We can see that the red line in the Residuals vs Fitted chart follow a straight line, which means that our adjustments worked!
 
 Before we apply any predictions, let's view the `summary()` of this model:
 
 ```{r}
 #view details of lm and predict sale price using the lm
-summary(housing.lm.3)
+summary.lm(housing.lm.3)
 ```
 
 ### Predict
