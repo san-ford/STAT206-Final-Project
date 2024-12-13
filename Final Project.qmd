@@ -426,6 +426,18 @@ plot(housing.lm.3)
 
 We can see that the red line in the Residuals vs Fitted chart follow a straight line, which means that our adjustments worked!
 
+```{r}
+#remove outliers in sale price
+
+housing_data.train.noout <- housing_data.train.1[housing_data.train.1$LotArea < 50000,]
+
+housing.lm.3 <- lm(log(housing_data.train.1$SalePrice)
+                   ~ .,
+                   data = housing_data.train.1)
+housing.lm.3
+plot(housing.lm.3)
+```
+
 Before we apply any predictions, let's view the `summary()` of this model:
 
 ```{r}
