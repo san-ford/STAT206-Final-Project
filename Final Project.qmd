@@ -17,7 +17,7 @@ editor: visual
 
 We intend to use linear regression techniques to approach the exercise in the Kaggle competition found at [https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques](https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques/data). The exercise provides two large data sets that describes houses in Ames, Iowa with 79 parameters. The goal of the exercise is to create an algorithm that predicts the selling price of homes based on the parameters. The data provided consists of two data sets: test.csv and train.csv. The training data set includes housing prices to facilitate the creation of a linear regression model that predicts sale prices of homes, which can then be tested on the test data set. Before using the test data set, we will attempt to maximize the accuracy of the model by splitting the training data in half, using half of the data for training, then comparing the other half with the model's prediction. After tuning the model, we will retrain it on the full training data set and predict housing prices for the test data set.We begin by importing the data sets and previewing them.
 
-In addition to the linear regression model, we will be training a Random Forest model. Random Forest is an ensemble learning technique that builds multiple decision trees and combines their outputs to capture complex, non-linear relationships in the data. To evaluate its performance, we will split the training data in half, using one half for training and the other for validation, measuring performance with metrics such as RMSE and R-squared. 
+In addition to the linear regression model, we will be training a Random Forest model. Random Forest is an ensemble learning technique that builds multiple decision trees and combines their outputs to capture complex, non-linear relationships in the data. To evaluate its performance, we will split the training data in half, using one half for training and the other for validation, measuring performance with metrics such as RMSE and R-squared.
 
 ## Data Analysis
 
@@ -577,6 +577,7 @@ qqline(log(housing_data.train.1$X1stFlrSF))
 qqnorm(log(housing_data.train.1$X2ndFlrSF[housing_data.train.1$X2ndFlrSF > 0]))
 qqline(log(housing_data.train.1$X2ndFlrSF[housing_data.train.1$X2ndFlrSF > 0]))
 ```
+
 It seems like the log function of living room area, garage area, and 1st floor area are good fits to a normal distribution. Overall quality fits a normal distribution best without a log function.
 
 ## Apply Linear Regression Model
@@ -664,8 +665,8 @@ plot(actual_sale_price, predict_sale_price,
      ylab = "Predicted Sale Price ($1000s)")
 ```
 
-Random Forest Model
-Load in the dataset for preprocessing before training the random forest model. 
+Random Forest Model Load in the dataset for preprocessing before training the random forest model.
+
 ```{r}
 # split the train data set in half
 housing_data.train.1 <- housing_data.train[1:730,]
@@ -673,6 +674,7 @@ housing_data.test.1 <- housing_data.train[731:1460,]
 head(housing_data.train.1)
 head(housing_data.test.1 )
 ```
+
 ```{r}
 # Check for missing values in each column
 colSums(is.na(housing_data.train.1))
@@ -695,6 +697,7 @@ for (col in names(housing_data.train.1)[numeric_cols]) {
   }
 }
 ```
+
 ```{r}
 # Identify categorical columns
 categorical_cols <- sapply(housing_data.train.1, is.character)
@@ -710,7 +713,7 @@ for (col in names(housing_data.train.1)[categorical_cols]) {
 }
 ```
 
-Now, we will train the random forest model. 
+Now, we will train the random forest model.
 
 ```{r}
 library(randomForest)
@@ -727,18 +730,21 @@ rf_model <- randomForest(
 # View model summary
 print(rf_model)
 ```
+
 ```{r}
 # Predict on the test dataset
 rf_predictions <- predict(rf_model, newdata = housing_data.test.1)
 # Check for missing or invalid predictions
 summary(rf_predictions)
 ```
+
 ```{r}
 # Filter out NA predictions
 valid_indices <- !is.na(rf_predictions)  # Get indices of non-NA predictions
 filtered_predictions <- rf_predictions[valid_indices]
 filtered_actuals <- housing_data.test.1$SalePrice[valid_indices]
 ```
+
 ```{r}
 library(Metrics)
 
@@ -756,6 +762,7 @@ cat("Average Sale Price:", average_sale_price, "\n")
 rmse_percentage <- (rmse_value / average_sale_price) * 100
 cat("RMSE as Percentage of Average Sale Price:", rmse_percentage, "%\n")
 ```
+
 ```{r}
 # Calculate R²
 rsq_value <- 1 - sum((filtered_actuals - filtered_predictions)^2) / 
@@ -763,7 +770,7 @@ rsq_value <- 1 - sum((filtered_actuals - filtered_predictions)^2) /
 cat("R²:", rsq_value, "\n")
 ```
 
-Given these metrics, we see the Random Forest model performed well with an R-squared value of .856. This indicated that the model explains around 85% of the variance in the prices of the homes and essentially captures a majority of the patterns. For the RMSE value of $29,299.79, this indicated that on average the models predictions differ from the actual values by this amount. Given that this is only 16.37% of the average sales price, this indicates a good performing model. 
+Given these metrics, we see the Random Forest model performed well with an R-squared value of .856. This indicated that the model explains around 85% of the variance in the prices of the homes and essentially captures a majority of the patterns. For the RMSE value of \$29,299.79, this indicated that on average the models predictions differ from the actual values by this amount. Given that this is only 16.37% of the average sales price, this indicates a good performing model.
 
 ```{r}
 plot_data <- data.frame(
@@ -782,4 +789,3 @@ ggplot(plot_data, aes(x = Actual, y = Predicted)) +
   ) +
   theme_minimal()
 ```
-

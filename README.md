@@ -26,6 +26,8 @@ predict housing prices for the test data set.
 
 -   base R packages
 -   tidyverse
+-   randomForest
+-   Metrics
 
 ## Acknowledgments
 
